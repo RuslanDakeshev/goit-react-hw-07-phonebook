@@ -1,9 +1,11 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, isAnyOf } from '@reduxjs/toolkit';
 import {
   fetchContacts,
   deleteContacts,
   addContacts,
 } from './contacts-operations';
+
+
 const initialState = {
   items: [],
   isLoading: false,
@@ -14,45 +16,51 @@ const contactsSlice = createSlice({
   initialState,
   extraReducers: builder =>
     builder
-      .addCase(fetchContacts.pending, state => {
-        state.isLoading = true;
-      })
+
       .addCase(fetchContacts.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
         state.items = payload;
-        state.error = null;
       })
-      .addCase(fetchContacts.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-      })
-      .addCase(deleteContacts.pending, state => {
-        state.isLoading = true;
-      })
+
       .addCase(deleteContacts.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
         state.items = state.items.filter(({ id }) => id !== payload);
-        state.error = null;
       })
-      .addCase(deleteContacts.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-      })
-      .addCase(addContacts.pending, state => {
-        state.isLoading = true;
-      })
+
       .addCase(addContacts.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
         state.items = [...state.items, payload];
-        state.error = null;
       })
-      .addCase(addContacts.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-      }),
+
+      .addMatcher(
+        isAnyOf(
+          fetchContacts.pending,
+          deleteContacts.pending,
+          addContacts.pending
+        ),
+        state => {
+          state.isLoading = true;
+        }
+      )
+      .addMatcher(
+        isAnyOf(
+          fetchContacts.fulfilled,
+          deleteContacts.fulfilled,
+          addContacts.fulfilled
+        ),
+        state => {
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        isAnyOf(
+          fetchContacts.rejected,
+          deleteContacts.rejected,
+          addContacts.rejected
+        ),
+        (state, { payload }) => {
+          state.isLoading = false;
+          state.error = payload;
+        }
+      ),
 });
 
 export default contactsSlice.reducer;
-
-
-
